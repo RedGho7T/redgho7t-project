@@ -13,11 +13,20 @@ public class Util {
     }
 
     public static Connection getConnection() {
+
         try {
             return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Ошибка подключения к базе данных: " + e.getMessage(), e);
+        }
+    }
+    public static void testConnection() {
+        try (Connection connection = getConnection()) {
+            System.out.println("Соединение с базой данных установлено");
+            System.out.println("Database: " + connection.getCatalog());
+        } catch (Exception e) {
+            System.out.println("Ошибка подключения: " + e.getMessage());
         }
     }
 }
