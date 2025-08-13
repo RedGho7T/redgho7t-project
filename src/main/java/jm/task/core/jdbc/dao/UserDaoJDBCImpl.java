@@ -8,120 +8,128 @@ import java.util.List;
 
 public class UserDaoJDBCImpl implements jm.task.core.jdbc.dao.UserDao {
 
-    public UserDaoJDBCImpl() {
+public UserDaoJDBCImpl() {
 
+}
+
+@Override
+public void createUsersTable() {
+    String sql = "CREATE TABLE IF NOT EXISTS users (" +
+            "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
+            "name VARCHAR(50) NOT NULL, " +
+            "lastName VARCHAR(50) NOT NULL, " +
+            "age TINYINT NOT NULL)";   // запрос в БД на создание таблицы
+
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         Statement statement = connection.createStatement()) {
+
+        statement.executeUpdate(sql);
+        System.out.println("Таблица users создана успешно");
+
+    } catch (SQLException e) {
+        System.err.println("Ошибка при создании таблицы: " + e.getMessage());
+        throw new RuntimeException(e);
     }
 
-    @Override
-    public void createUsersTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS users (" + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " + "name VARCHAR(50) NOT NULL, " + "lastName VARCHAR(50) NOT NULL, " + "age TINYINT NOT NULL)";
+}
 
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection(); Statement statement = connection.createStatement()) {
+@Override
+public void dropUsersTable() {
+    String sql = "DROP TABLE IF EXISTS users";
 
-            statement.executeUpdate(sql);
-            System.out.println("Таблица users создана успешно");
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         Statement statement = connection.createStatement()) {
 
-        } catch (SQLException e) {
-            System.err.println("Ошибка при создании таблицы: " + e.getMessage());
-            throw new RuntimeException(e);
+        statement.executeUpdate(sql);
+        System.out.println("Таблица users удалена успешно");
+
+    } catch (SQLException e) {
+        System.err.println("Ошибка при удалении таблицы: " + e.getMessage());
+        throw new RuntimeException(e);
+    }
+}
+
+@Override
+public void saveUser(String name, String lastName, byte age) {
+    String sql = "INSERT INTO users (name, lastname, age) VALUES (?, ?, ?)";
+
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+        pstmt.setString(1, name);
+        pstmt.setString(2, lastName);
+        pstmt.setByte(3, age);
+
+        pstmt.executeUpdate();
+        System.out.println("User с именем — " + name + " добавлен в базу данных");
+
+    } catch (SQLException e) {
+        System.err.println("Ошибка при сохранении пользователя: " + e.getMessage());
+        throw new RuntimeException(e);
+    }
+}
+
+@Override
+public void removeUserById(long id) {
+    String sql = "DELETE FROM users WHERE id = ?";
+
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+        pstmt.setLong(1, id);
+
+        int rowsAffected = pstmt.executeUpdate();
+        if (rowsAffected > 0) {
+            System.out.println("User с ID " + id + " удален из базы данных");
+        } else {
+            System.out.println("User с ID " + id + " не найден");
         }
 
+    } catch (SQLException e) {
+        System.err.println("Ошибка при удалении пользователя: " + e.getMessage());
+        throw new RuntimeException(e);
     }
+}
 
-    @Override
-    public void dropUsersTable() {
-        String sql = "DROP TABLE IF EXISTS users";
+@Override
+public List<User> getAllUsers() {   // создание спи
+    List<User> users = new ArrayList<>();
+    String sql = "SELECT id, name, lastName, age FROM users";
 
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
-             Statement statement = connection.createStatement()) {
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
 
-            statement.executeUpdate(sql);
-            System.out.println("Таблица users удалена успешно");
+        while (resultSet.next()) {
+            User user = new User();
+            user.setId(resultSet.getLong("id"));
+            user.setName(resultSet.getString("name"));
+            user.setLastName(resultSet.getString("lastName"));
+            user.setAge(resultSet.getByte("age"));
 
-        } catch (SQLException e) {
-            System.err.println("Ошибка при удалении таблицы: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void saveUser(String name, String lastName, byte age) {
-        String sql = "INSERT INTO users (name, lastname, age) VALUES (?, ?, ?)";
-
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection(); PreparedStatement pstmt = connection.prepareStatement(sql)) {
-
-            pstmt.setString(1, name);
-            pstmt.setString(2, lastName);
-            pstmt.setByte(3, age);
-
-            pstmt.executeUpdate();
-            System.out.println("User с именем — " + name + " добавлен в базу данных");
-
-        } catch (SQLException e) {
-            System.err.println("Ошибка при сохранении пользователя: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void removeUserById(long id) {
-        String sql = "DELETE FROM users WHERE id = ?";
-
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
-
-            pstmt.setLong(1, id);
-
-            int rowsAffected = pstmt.executeUpdate();
-            if (rowsAffected > 0) {
-                System.out.println("User с ID " + id + " удален из базы данных");
-            } else {
-                System.out.println("User с ID " + id + " не найден");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Ошибка при удалении пользователя: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT id, name, lastName, age FROM users";
-
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
-
-            while (resultSet.next()) {
-                User user = new User();
-                user.setId(resultSet.getLong("id"));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("lastName"));
-                user.setAge(resultSet.getByte("age"));
-
-                users.add(user);
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Ошибка при получении пользователей: " + e.getMessage());
-            throw new RuntimeException(e);
+            users.add(user);
         }
 
-        return users;
+    } catch (SQLException e) {
+        System.err.println("Ошибка при получении пользователей: " + e.getMessage());
+        throw new RuntimeException(e);
     }
 
-    @Override
-    public void cleanUsersTable() {
-        String sql = "DELETE FROM users";
+    return users;
+}
 
-        try (Connection connection = jm.task.core.jdbc.util.Util.getConnection(); Statement statement = connection.createStatement()) {
+@Override
+public void cleanUsersTable() {
+    String sql = "DELETE FROM users";
 
-            int rowsAffected = statement.executeUpdate(sql);
-            System.out.println("Таблица users очищена. Удалено записей: " + rowsAffected);
+    try (Connection connection = jm.task.core.jdbc.util.Util.getConnection();
+         Statement statement = connection.createStatement()) {
 
-        } catch (SQLException e) {
-            System.err.println("Ошибка при очистке таблицы: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
+        int rowsAffected = statement.executeUpdate(sql);
+        System.out.println("Таблица users очищена. Удалено записей: " + rowsAffected);
+
+    } catch (SQLException e) {
+        System.err.println("Ошибка при очистке таблицы: " + e.getMessage());
+        throw new RuntimeException(e);
     }
+}
 }

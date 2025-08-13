@@ -4,16 +4,16 @@ import jm.task.core.jdbc.model.User;
 
 import java.util.List;
 
-public interface UserDao {
-    void createUsersTable();
+public interface UserDao {  // Интерфейс доступа к данным
+void createUsersTable(); // создаем таблицу
 
-    void dropUsersTable();
+void dropUsersTable(); // удаляем таблицу
 
-    void saveUser(String name, String lastName, byte age);
+void saveUser(String name, String lastName, byte age); // сохраняем нового юзера
 
-    void removeUserById(long id);
+void removeUserById(long id); // удаляет по ID
 
-    List<User> getAllUsers();
+List<User> getAllUsers(); // получаем всех юзеров из БД
 
-    void cleanUsersTable();
+void cleanUsersTable(); // сносим фулл таблицу, но с сохранением структуры
 }
