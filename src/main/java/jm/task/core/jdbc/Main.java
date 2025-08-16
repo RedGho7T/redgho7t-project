@@ -2,10 +2,13 @@ package jm.task.core.jdbc;
 
 import jm.task.core.jdbc.service.UserService;
 import jm.task.core.jdbc.service.UserServiceImpl;
+import jm.task.core.jdbc.util.Util;
+
+import java.sql.Connection;
 
 public class Main {
 public static void main(String[] args) {
-    UserService userService = new UserServiceImpl();
+    UserServiceImpl userService = new UserServiceImpl();
 
     userService.createUsersTable();
 
@@ -22,5 +25,8 @@ public static void main(String[] args) {
 
     // Удаляем таблицу
     userService.dropUsersTable();
+
+    // закрываем соединение
+    userService.closeConnection();
 }
 }
